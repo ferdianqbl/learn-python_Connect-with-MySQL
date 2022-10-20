@@ -1,3 +1,5 @@
+from distutils.archive_util import make_archive
+from venv import create
 import mysql.connector
 
 
@@ -11,26 +13,76 @@ def sqlConnect():
     )
 
 
-def dbCursor():
+def create_database():
     database = sqlConnect()
     db_cursor = database.cursor()
-    return db_cursor
+    db_cursor.execute(
+        "CREATE TABLE IF NOT EXISTS employees (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), role VARCHAR(255), salary INT)")
+
+    db_cursor.execute("SELECT * FROM employees")
 
 
-def createDatabase():
-    dbCursor().execute("CREATE TABLE IF NOT EXISTS employees (id INT AUTO_INCREMENT PRIMARY KEY, name VARCHAR(255), role VARCHAR(255), salary INT)")
-
-    dbCursor().execute("SELECT * FROM employees")
-
-
-def addEmployee():
+def add_employee():
+    database = sqlConnect()
+    db_cursor = database.cursor()
     name = input("Enter employee name: ")
     role = input("Enter employee role: ")
     salary = input("Enter employee salary: ")
+    db_cursor.execute(
+        "INSERT INTO employees (name, role, salary) VALUES (%s, %s, %s)", (name, role, salary))
+    database.commit()
+    print(db_cursor.rowcount, "record inserted.")
 
-    dbCursor().execute("INSERT INTO employees (name, role, salary) VALUES (%s, %s, %s)",
-                       (name, role, salary))
 
-    sqlConnect().commit()
+def view_employees():
+    database = sqlConnect()
+    db_cursor = database.cursor()
+    db_cursor.execute("SELECT * FROM employees")
+    employees = db_cursor.fetchall()
+    for employee in employees:
+        print(employee)
 
-    print(dbCursor().rowcount, "record inserted.")
+
+def update_employee():
+    database = sqlConnect()
+    db_cursor = database.cursor()
+    id = input("Enter employee id: ")
+    name = input("Enter employee name: ")
+    role = input("Enter employee role: ")
+    salary = input("Enter employee salary: ")
+    db_cursor.execute(
+        "UPDATE employees SET name = %s, role = %s, salary = %s WHERE id = %s", (name, role, salary, id))
+    database.commit()
+    print(db_cursor.rowcount, "record(s) affected")
+
+
+def delete_employee():
+    database = sqlConnect()
+    db_cursor = database.cursor()
+    id = input("Enter employee id: ")
+    db_cursor.execute("DELETE FROM employees WHERE id = %s", (id,))
+    database.commit()
+    print(db_cursor.rowcount, "record(s) deleted")
+
+
+def main():
+    create_database()
+    while True:
+        print("1. Add employee\n2. View employees\n3. Update employee\n4. Delete employee\n5. Exit")
+        choice = input("Enter your choice: ")
+        if choice == "1":
+            add_employee()
+        elif choice == "2":
+            view_employees()
+        elif choice == "3":
+            update_employee()
+        elif choice == "4":
+            delete_employee()
+        elif choice == "5":
+            break
+        else:
+            print("Invalid choice")
+
+
+if __name__ == "__main__":
+    main()
