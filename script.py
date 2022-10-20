@@ -1,5 +1,3 @@
-from distutils.archive_util import make_archive
-from venv import create
 import mysql.connector
 
 
